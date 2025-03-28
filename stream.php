@@ -15,18 +15,20 @@ if (!empty($existpid)) {
     exec("pkill -f 'ffmpeg.*$safe_idstream'");
 }
 
-// Start new stream (Convert RTSP to HLS)
-$command = "/usr/bin/nohup /var/www/html/yt-dlp_linux https://www.youtube.com/watch?v=$safe_idstream -o - " .
+// Start new stream (Convert YouTube to HLS)
+$yt_dlp_path = "/usr/local/bin/yt-dlp";
+$ffmpeg_command = "/usr/bin/nohup $yt_dlp_path -f best -o - https://www.youtube.com/watch?v=$safe_idstream " .
     "| ffmpeg -re -i - -c:v libx264 -preset ultrafast -crf 18 -c:a aac -b:a 128k " .
-    "-f hls -hls_time 5 -hls_list_size 10 /var/www/html/streams/$idstream.m3u8 " .
+    "-f hls -hls_time 5 -hls_list_size 10 /var/www/html/streams/$safe_idstream.m3u8 " .
     ">/tmp/yt_dlpdebug.txt 2>&1 &";
-exec($command);
+
+exec($ffmpeg_command);
 
 // Wait and check if process started
 sleep(5);
 $newpid = trim(shell_exec("pgrep -f 'ffmpeg.*$safe_idstream'"));
 if (!$newpid) {
-    die("Failed to start streaming.");
+    die("Failed to start streaming. Check logs at /tmp/yt_dlpdebug.txt");
 }
 
 // Output stream link (HLS)
