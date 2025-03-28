@@ -1,13 +1,14 @@
 <?php
-echo "<h1>Youtube to RTSP Gateway</h1>";
+echo "<h1>YouTube to HLS Gateway</h1>";
 
 echo "<form action=\"index.php\" method=\"POST\">
 Youtube Search: <input type=\"text\" name=\"videoname\">
 <input type=\"submit\" value=\"Search videos!\">
 </form>";
 
-echo "<br>Current viewers: " . trim(shell_exec("pgrep -c ffmpeg"));
-echo "<br>CPU Usage: " . trim(shell_exec("top -b -n1 | grep \"Cpu(s)\" | awk '{print $2}'")) . "%";
+// Display system info (AJAX-based)
+echo "<br>Current viewers: <span id='viewers'>Loading...</span>";
+echo "<br>CPU Usage: <span id='cpu'>Loading...</span>%";
 echo "<br><br>";
 
 // Handle search request
@@ -20,7 +21,8 @@ if (empty($request)) {
 // Log search requests
 file_put_contents('/var/www/html/reqlog.txt', $request . PHP_EOL, FILE_APPEND);
 
-$api_key = getenv('YOUTUBE_API_KEY');  // Store API key securely
+// Get API Key securely
+$api_key = getenv('YOUTUBE_API_KEY');
 $reqenc = urlencode($request);
 $search_url = "https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=$reqenc&key=$api_key";
 
@@ -46,3 +48,16 @@ foreach ($data['items'] as $item) {
     echo "<a href='stream.php?id=$video_id'><img src='$thumbnail'></a><br><br>";
 }
 ?>
+
+<script>
+    function updateStats() {
+        fetch("stats.php")
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("viewers").innerText = data.viewers;
+                document.getElementById("cpu").innerText = data.cpu;
+            });
+    }
+    setInterval(updateStats, 5000);
+    updateStats();
+</script>
