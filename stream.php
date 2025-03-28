@@ -28,11 +28,7 @@ if (!$newpid) {
     die("Failed to start streaming.");
 }
 
-// Output stream links
-echo "<a href='rtsp://enthusiastic-edeline-kmsepr-0cbdd0dd.koyeb.app/$idstream'>Watch (link 1)</a> *Port 554<br>";
-echo "<a href='rtsp://enthusiastic-edeline-kmsepr-0cbdd0dd.koyeb.app:443/$idstream'>Watch (link 2)</a> *Port 443, use this if the first one doesn't work<br>";
-echo "<a href='rtsp://enthusiastic-edeline-kmsepr-0cbdd0dd.koyeb.app:8080/$idstream'>Watch (link 3)</a> *Port 8080, use this if the previous ones don't work<br>";
-echo "<a href='rtsp://enthusiastic-edeline-kmsepr-0cbdd0dd.koyeb.app:8554/$idstream'>Watch (link 4)</a> *Port 8554, you can try this one as well<br>";
-
+// Output stream link (only port 8000)
+echo "<a href='rtsp://enthusiastic-edeline-kmsepr-0cbdd0dd.koyeb.app:8000/$idstream'>Watch</a> *Port 8000<br>";
 echo "<br><a href='index.php'>Back</a>";
 ?>
