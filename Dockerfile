@@ -30,7 +30,7 @@ RUN chown -R www-data:www-data /var/www/html
 # Create directory for HLS streams
 RUN mkdir -p /var/www/html/streams && chmod 777 /var/www/html/streams
 
-# Expose Apache on port 80 (RTSP is NOT supported on Koyeb)
+# Expose only HTTP (port 80)
 EXPOSE 80
 
 # Start Apache in the foreground
