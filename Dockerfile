@@ -27,9 +27,6 @@ COPY . /var/www/html/
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www/html
 
-# Create directory for HLS streams
-RUN mkdir -p /var/www/html/streams && chmod 777 /var/www/html/streams
-
 # Expose only HTTP (port 80)
 EXPOSE 80
 
