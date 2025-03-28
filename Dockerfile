@@ -11,9 +11,8 @@ RUN apt-get update && apt-get install -y \
 # Fix Apache's ServerName issue
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# Change Apache to listen on port 554 (required by Koyeb)
-RUN sed -i 's/Listen 80/Listen 554/' /etc/apache2/ports.conf \
-    && sed -i 's/<VirtualHost \*:80>/<VirtualHost *:554>/' /etc/apache2/sites-enabled/000-default.conf
+# Enable mod_rewrite for Apache
+RUN a2enmod rewrite
 
 # Set the working directory
 WORKDIR /var/www/html
@@ -24,8 +23,9 @@ COPY . /var/www/html/
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www/html
 
-# Expose the correct port
-EXPOSE 554
+# Expose Apache on port 80 (since Koyeb does not support RTSP)
+EXPOSE 80
 
-# Start Apache in foreground
-CMD ["apache2-foreground"]
+# Start Apache and FFmpeg in parallel
+CMD service apache2 start && \
+    ffmpeg -rtsp_transport tcp -i "rtsp://your-stream-url" -f mjpeg http://localhost/stream.mjpeg
