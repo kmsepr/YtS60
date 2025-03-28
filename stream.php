@@ -7,8 +7,4 @@ exec("kill $existpid");
 //create new one
 exec("/usr/bin/nohup /var/www/html/yt-dlp_linux https://www.youtube.com/watch?v=$idstream -o - | ffmpeg -re -i - -acodec amr_wb -ar 16000 -ac 1 -ab 24k -vcodec mpeg4 -vb 104k -r 15 -vf scale=320:240 -f rtsp rtsp://127.0.0.1:8080/$idstream >/tmp/yt_dlpdebug.txt 2>&1 &");
 sleep(20);
-echo "<a href=rtsp://tv.tg-gw.com:554/$idstream>Смотреть (ссылка 1)</a> *554 порт<br>";
-echo "<a href=rtsp://tv.tg-gw.com:443/$idstream>Смотреть (ссылка 2)</a> *443 порт, использовать, если не работает первая<br>";
-echo "<a href=rtsp://tv.tg-gw.com:8080/$idstream>Смотреть (ссылка 3)</a> *8080 порт, использовать, если не работают предыдущие<br>";
-echo "<a href=rtsp://tv.tg-gw.com:8554/$idstream>Смотреть (ссылка 4)</a> *8554 можно попробовать и этот<br>";
-echo "<a href=index.php><font color=blue>Назад</font></a>";
+echo "<a href=rtsp://enthusiastic-edeline-kmsepr-0cbdd0dd.koyeb.app/$idstream>Смотреть (ссылка 1)</a> *554 порт<br>";
