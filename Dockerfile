@@ -24,7 +24,7 @@ COPY . /var/www/html/
 # Set correct permissions
 RUN mkdir -p /var/www/html/streams /tmp && chmod -R 777 /var/www/html/streams /tmp
 
-# Expose Apache on port 80 (Koyeb only supports HTTP)
+# Expose Apache on port 80
 EXPOSE 80
 
 # Start Apache
