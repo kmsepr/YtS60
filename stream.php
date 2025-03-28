@@ -8,30 +8,25 @@ if (!preg_match("/^[a-zA-Z0-9_-]{11}$/", $idstream)) {
 }
 
 $safe_idstream = escapeshellcmd($idstream);
+$video_path = "/var/www/html/videos/$safe_idstream.mp4";
 
-// Kill old worker
-$existpid = trim(shell_exec("pgrep -f 'ffmpeg.*$safe_idstream'"));
-if (!empty($existpid)) {
-    exec("pkill -f 'ffmpeg.*$safe_idstream'");
+// Check if file already exists
+if (!file_exists($video_path)) {
+    // Download video in MP4 format
+    $command = "/usr/bin/nohup /var/www/html/yt-dlp_linux -f 'best[ext=mp4]' " .
+               "https://www.youtube.com/watch?v=$safe_idstream -o '$video_path' " .
+               ">/tmp/yt_dlpdebug.txt 2>&1 &";
+    exec($command);
+
+    sleep(5); // Give it some time to start
 }
 
-// Start new stream (Convert YouTube to HLS)
-$yt_dlp_path = "/usr/local/bin/yt-dlp";
-$ffmpeg_command = "/usr/bin/nohup $yt_dlp_path -f best -o - https://www.youtube.com/watch?v=$safe_idstream " .
-    "| ffmpeg -re -i - -c:v libx264 -preset ultrafast -crf 18 -c:a aac -b:a 128k " .
-    "-f hls -hls_time 5 -hls_list_size 10 /var/www/html/streams/$safe_idstream.m3u8 " .
-    ">/tmp/yt_dlpdebug.txt 2>&1 &";
-
-exec($ffmpeg_command);
-
-// Wait and check if process started
-sleep(5);
-$newpid = trim(shell_exec("pgrep -f 'ffmpeg.*$safe_idstream'"));
-if (!$newpid) {
-    die("Failed to start streaming. Check logs at /tmp/yt_dlpdebug.txt");
+// Check if download was successful
+if (!file_exists($video_path)) {
+    die("Failed to fetch video.");
 }
 
-// Output stream link (HLS)
-echo "<a href='streams/$idstream.m3u8'>Watch Stream (HLS)</a><br>";
+// Output download link
+echo "<a href='/videos/$safe_idstream.mp4'>Download MP4</a><br>";
 echo "<br><a href='index.php'>Back</a>";
 ?>
