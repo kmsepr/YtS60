@@ -11,9 +11,9 @@ RUN apt-get update && apt-get install -y \
 # Fix Apache's ServerName issue
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# Change Apache to listen on port 8000 (required by Koyeb)
-RUN sed -i 's/Listen 80/Listen 8000/' /etc/apache2/ports.conf \
-    && sed -i 's/<VirtualHost \*:80>/<VirtualHost \*:8000>/' /etc/apache2/sites-enabled/000-default.conf
+# Change Apache to listen on port 554 (required by Koyeb)
+RUN sed -i 's/Listen 80/Listen 554/' /etc/apache2/ports.conf \
+    && sed -i 's/<VirtualHost \*:80>/<VirtualHost *:554>/' /etc/apache2/sites-enabled/000-default.conf
 
 # Set the working directory
 WORKDIR /var/www/html
@@ -25,7 +25,7 @@ COPY . /var/www/html/
 RUN chown -R www-data:www-data /var/www/html
 
 # Expose the correct port
-EXPOSE 8000
+EXPOSE 554
 
 # Start Apache in foreground
 CMD ["apache2-foreground"]
