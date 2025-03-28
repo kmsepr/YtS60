@@ -1,32 +1,33 @@
-<?php
-$idstream = $_GET["id"] ?? '';
+# Use an official PHP-Apache image
+FROM php:8.2-apache
 
-// Validate YouTube video ID
-if (!preg_match("/^[a-zA-Z0-9_-]{11}$/", $idstream)) {
-    http_response_code(404);
-    die("Invalid stream ID");
-}
+# Install required dependencies
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    curl \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
 
-$safe_idstream = escapeshellcmd($idstream);
-$video_path = "/var/www/html/videos/$safe_idstream.mp4";
+# Fix Apache's ServerName issue
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-// Check if file already exists
-if (!file_exists($video_path)) {
-    // Download video in MP4 format
-    $command = "/usr/bin/nohup /var/www/html/yt-dlp_linux -f 'best[ext=mp4]' " .
-               "https://www.youtube.com/watch?v=$safe_idstream -o '$video_path' " .
-               ">/tmp/yt_dlpdebug.txt 2>&1 &";
-    exec($command);
+# Enable mod_rewrite for Apache
+RUN a2enmod rewrite
 
-    sleep(5); // Give it some time to start
-}
+# Set the working directory
+WORKDIR /var/www/html
 
-// Check if download was successful
-if (!file_exists($video_path)) {
-    die("Failed to fetch video.");
-}
+# Ensure required directories exist
+RUN mkdir -p /var/www/html/videos /tmp && chmod -R 777 /var/www/html/videos /tmp
 
-// Output download link
-echo "<a href='/videos/$safe_idstream.mp4'>Download MP4</a><br>";
-echo "<br><a href='index.php'>Back</a>";
-?>
+# Copy project files
+COPY . /var/www/html/
+
+# Set correct permissions
+RUN chown -R www-data:www-data /var/www/html
+
+# Expose Apache on port 80
+EXPOSE 80
+
+# Start Apache in foreground
+CMD ["apache2-foreground"]
