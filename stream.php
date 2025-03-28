@@ -1,32 +1,34 @@
 <?php
-$idstream = $_GET["id"] ?? '';
+$id = $_GET["id"] ?? '';
 
-// Validate YouTube video ID
-if (!preg_match("/^[a-zA-Z0-9_-]{11}$/", $idstream)) {
+if (!preg_match("/^[a-zA-Z0-9_-]{11}$/", $id)) {
     http_response_code(404);
     die("Invalid stream ID");
 }
 
-$safe_idstream = escapeshellcmd($idstream);
-$video_path = "/var/www/html/videos/$safe_idstream.mp4";
+$safe_id = escapeshellcmd($id);
 
-// Check if file already exists
-if (!file_exists($video_path)) {
-    // Download video in MP4 format
-    $command = "/usr/bin/nohup /var/www/html/yt-dlp_linux -f 'best[ext=mp4]' " .
-               "https://www.youtube.com/watch?v=$safe_idstream -o '$video_path' " .
-               ">/tmp/yt_dlpdebug.txt 2>&1 &";
-    exec($command);
-
-    sleep(5); // Give it some time to start
+// Kill old worker
+$existpid = trim(shell_exec("pgrep -f 'ffmpeg.*$safe_id'"));
+if (!empty($existpid)) {
+    exec("pkill -f 'ffmpeg.*$safe_id'");
 }
 
-// Check if download was successful
-if (!file_exists($video_path)) {
-    die("Failed to fetch video.");
+// Convert video to HLS format
+$command = "/usr/bin/nohup /usr/bin/yt-dlp -f best -o - 'https://www.youtube.com/watch?v=$safe_id' " .
+    "| ffmpeg -re -i - -c:v libx264 -preset ultrafast -crf 18 -c:a aac -b:a 128k " .
+    "-f hls -hls_time 5 -hls_list_size 10 /var/www/html/streams/$safe_id.m3u8 " .
+    ">/tmp/yt_dlpdebug.txt 2>&1 &";
+
+exec($command);
+
+// Wait for process to start
+sleep(5);
+$newpid = trim(shell_exec("pgrep -f 'ffmpeg.*$safe_id'"));
+if (!$newpid) {
+    die("Failed to start streaming.");
 }
 
-// Output download link
-echo "<a href='/videos/$safe_idstream.mp4'>Download MP4</a><br>";
+echo "<a href='streams/$safe_id.m3u8'>Watch Stream (HLS)</a><br>";
 echo "<br><a href='index.php'>Back</a>";
 ?>
