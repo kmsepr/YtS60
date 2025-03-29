@@ -1,7 +1,6 @@
-# Base Image
 FROM php:8.2-apache
 
-# Install required dependencies
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     ffmpeg \
@@ -23,7 +22,7 @@ WORKDIR /var/www/html
 COPY . /var/www/html/
 
 # Expose HTTP & RTSP ports
-EXPOSE 80 554 8080 8554
+EXPOSE 80 8554
 
 # Start Apache
 CMD ["apache2-foreground"]
