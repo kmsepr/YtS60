@@ -37,12 +37,12 @@ if (!empty($existpid)) {
     exec("pkill -f 'ffmpeg.*$safe_idstream'");
 }
 
-// Start new stream (Download + Convert to HLS)
-$yt_dlp_path = "/usr/local/bin/yt-dlp";
-$command = "/usr/bin/nohup $yt_dlp_path -f 'best' https://www.youtube.com/watch?v=$safe_idstream -o - " .
+// Start new stream (Convert YouTube to RTSP)
+$command = "/usr/bin/nohup yt-dlp -f 'best' https://www.youtube.com/watch?v=$safe_idstream -o - " .
     "| ffmpeg -re -i - -c:v libx264 -preset ultrafast -crf 18 -c:a aac -b:a 128k " .
-    "-f hls -hls_time 5 -hls_list_size 10 $stream_path " .
+    "-f rtsp rtsp://tv.tg-gw.com/$safe_idstream " .
     ">/tmp/yt_dlpdebug.txt 2>&1 &";
+
 exec($command);
 
 // Wait and check if process started
