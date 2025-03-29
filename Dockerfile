@@ -20,9 +20,22 @@ RUN mkdir -p /mnt/data/yt-dlp-cache /mnt/data/cache /var/www/html
 COPY . /var/www/html
 WORKDIR /var/www/html
 
+# Remove Apache default index.html
+RUN rm -f /var/www/html/index.html
+
 # Set correct permissions for Apache
 RUN chown -R www-data:www-data /var/www/html /mnt/data \
     && chmod -R 755 /var/www/html /mnt/data
+
+# Configure Apache to serve index.php
+RUN echo '<VirtualHost *:80>
+    DocumentRoot /var/www/html
+    DirectoryIndex index.php
+    <Directory "/var/www/html">
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 # Expose only port 80 (Koyeb limitation)
 EXPOSE 80
