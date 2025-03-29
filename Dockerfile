@@ -8,6 +8,13 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Set the cache directory for yt-dlp
+ENV YTDLP_CACHE_DIR=/tmp/yt-dlp-cache
+
+# Create the cache directory and set proper permissions
+RUN mkdir -p /tmp/yt-dlp-cache && \
+    chmod -R 777 /tmp/yt-dlp-cache
+
 # Add yt-dlp to PATH
 ENV PATH="/opt/venv/bin:$PATH"
 
