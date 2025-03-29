@@ -4,7 +4,7 @@ if (!preg_match("/^[a-zA-Z0-9_-]{11}$/", $idstream)) {
     die("Invalid video ID"); 
 }
 
-// Kill old FFmpeg process (if any)
+// Kill old FFmpeg process
 $existpid = trim(shell_exec("pgrep -f 'ffmpeg.*$idstream'"));
 if (!empty($existpid)) {
     exec("pkill -f 'ffmpeg.*$idstream'");
