@@ -12,4 +12,4 @@ WORKDIR /var/www/html
 COPY . /var/www/html/
 
 # Expose Apache Port
-EXPOSE 80
+EXPOSE 8080
