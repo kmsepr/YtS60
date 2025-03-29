@@ -1,4 +1,4 @@
-# Use the official PHP-Apache image
+# Use official PHP-Apache image
 FROM php:8.2-apache
 
 # Install dependencies
