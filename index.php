@@ -1,40 +1,39 @@
 <?php
-echo "<h2>YouTube to RTSP Gateway</h2>";
+$youtubeApiKey = getenv("YOUTUBE_API_KEY");
 
-echo "<form action='index.php' method='POST'>
-    YouTube Search: <input type='text' name='videoname'>
-    <input type='submit' value='Search'>
-</form>";
+<title>Youtube to RTSP Gateway</title>
 
-// Show server load
-echo "<br><b>Server Load:</b><br>";
-echo "Current viewers: " . shell_exec("ps -ax | grep ffmpeg | wc -l") . "<br>";
-echo "CPU Usage: " . shell_exec("top -b -n1 | grep 'Cpu(s)' | awk '{print $2}'") . "%<br><br>";
+<h2>Youtube to RTSP Gateway</h2>
+<form action="index.php" method="POST">
+    Youtube Search: <input type="text" name="videoname">
+    <input type="submit" value="Search videos!">
+</form>
 
-// Handle search request
-if (!empty($_POST["videoname"])) {
-    $request = trim($_POST["videoname"]);
-    file_put_contents('/var/www/html/reqlog.txt', $request . "\n", FILE_APPEND);
+<?php
+echo "Current viewers: ";
+echo shell_exec("ps -ax | grep ffmpeg | wc | awk ' { print $1-3 }'");
+echo " | CPU Usage: ";
+echo shell_exec("top -b -n1 | grep \"Cpu(s)\" | awk '{print $2}'");
+echo "%<br><br>";
 
-    // Fetch video IDs from YouTube search
-    $reqenc = urlencode($request);
-    $api_key = "YOUR_YOUTUBE_API_KEY"; // Replace with your API key
-    $search_url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=$reqenc&type=video&maxResults=10&key=$api_key";
-    
-    $response = file_get_contents($search_url);
-    $json = json_decode($response, true);
+$request = $_POST["videoname"] ?? '';
+if (empty($request)) {
+    die();
+}
 
-    if (!isset($json["items"])) {
-        die("Error fetching results. Check API key.");
-    }
+file_put_contents('/var/www/html/reqlog.txt', $request . "\r\n", FILE_APPEND);
+$reqenc = urlencode($request);
+$ids = shell_exec("curl -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36' 'https://www.youtube.com/results?search_query=$reqenc' | grep -oP '(?<=\\\"videoId\\\":\\\"|\\\"videoId\\\":\\\")\\w{11}' | uniq");
+$idsarray = preg_split('/\\s+/', trim($ids));
+$i = 0;
 
-    foreach ($json["items"] as $video) {
-        $video_id = $video["id"]["videoId"];
-        $title = htmlspecialchars($video["snippet"]["title"]);
-        $thumbnail = $video["snippet"]["thumbnails"]["default"]["url"];
+foreach ($idsarray as $item) {
+    if (++$i == 11) break;
 
-        echo "<a href='stream.php?id=$video_id'>$title</a><br>";
-        echo "<a href='stream.php?id=$video_id'><img src='$thumbnail'></a><br><br>";
-    }
+    $videon = shell_exec("curl -s -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36' 'https://www.youtube.com/watch?v=$item' | grep -o -P '(?<=<title>).*(?=</title>)' | sed 's/- YouTube//g'");
+    $duration = shell_exec("curl -s 'https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=$item&key=$youtubeApiKey' | grep \"duration\" | awk -F ' ' '{print $2}' | sed -e 's/\\\"PT//g' -e 's/S\\\",/ СЕК/g' -e 's/H/ ЧАС:/g' -e 's/M/ МИН:/g'");
+
+    echo "<font color=blue><a href='stream.php?id=$item'>$videon</a></font> ($duration)<br>";
+    echo "<a href='stream.php?id=$item'><img src='https://i.ytimg.com/vi/$item/1.jpg'></a><br>";
 }
 ?>
