@@ -1,6 +1,6 @@
 <?php
 // Your YouTube API Key (make sure it's stored securely!)
-$api_key = "YOUR_YOUTUBE_API_KEY";
+$api_key = "YOUTUBE_API_KEY";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $query = $_POST["videoname"] ?? "";
