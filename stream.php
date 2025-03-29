@@ -16,8 +16,8 @@ if ($existpid) {
     exec("kill $existpid");
 }
 
-// Run yt-dlp to get video URL
-$yt_dl_command = "/opt/venv/bin/yt-dlp -f best -g https://www.youtube.com/watch?v=$idstream";
+// Run yt-dlp to get video URL with cookies
+$yt_dl_command = "/opt/venv/bin/yt-dlp --cookies /mnt/data/cookies.txt -f best -g https://www.youtube.com/watch?v=$idstream";
 $video_url = shell_exec($yt_dl_command);
 
 if (empty($video_url)) {
