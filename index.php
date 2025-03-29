@@ -1,27 +1,30 @@
 <?php
-$idstream = $_GET["id"] ?? "";
-if (!preg_match("/^[a-zA-Z0-9_-]{11}$/", $idstream)) { echo "Invalid ID"; die(); }
+echo "<title>YouTube to RTSP</title>";
+echo "<form action='index.php' method='POST'>";
+echo "YouTube Search: <input type='text' name='videoname'>";
+echo "<input type='submit' value='Search'>";
+echo "</form>";
 
-// Kill old FFmpeg process for this stream
-exec("pkill -f 'ffmpeg.*$idstream'");
+echo "Current viewers: " . shell_exec("ps -ax | grep ffmpeg | wc -l");
+echo " | CPU: " . shell_exec("top -b -n1 | grep 'Cpu(s)' | awk '{print $2}'") . "%<br><br>";
 
-// Start new stream
-exec("ffmpeg -re -i $(yt-dlp -f best -g https://www.youtube.com/watch?v=$idstream) \
-    -acodec amr_wb -ar 16000 -ac 1 -ab 24k \
-    -vcodec mpeg4 -vb 128k -r 15 -vf scale=320:240 \
-    -f rtsp rtsp://tv.tg-gw.com:8554/$idstream >/tmp/yt_dlpdebug.txt 2>&1 &");
+$request = $_POST["videoname"] ?? "";
+if (empty($request)) die();
 
-// Wait for the stream to start
-sleep(3);
+file_put_contents('/var/www/html/reqlog.txt', $request . "\n", FILE_APPEND);
+$reqenc = urlencode($request);
 
-// Check if the stream is running
-if (empty(exec("ffprobe -show_streams -v quiet rtsp://tv.tg-gw.com:8554/$idstream"))) {
-    sleep(3);
-    header("Refresh:0");
-} else {
-    echo "<a href=rtsp://tv.tg-gw.com:554/$idstream>Watch (link 1)</a><br>";
-    echo "<a href=rtsp://tv.tg-gw.com:443/$idstream>Watch (link 2)</a><br>";
-    echo "<a href=rtsp://tv.tg-gw.com:8554/$idstream>Watch (link 3)</a><br>";
-    echo "<a href=index.php>Back</a>";
+// Search YouTube (Using YouTube API Key from Koyeb)
+$apikey = getenv('YOUTUBE_API_KEY');
+$search_url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=$reqenc&type=video&key=$apikey&maxResults=10";
+$search_results = json_decode(file_get_contents($search_url), true);
+
+foreach ($search_results['items'] as $item) {
+    $videoId = $item['id']['videoId'];
+    $title = $item['snippet']['title'];
+    $thumbnail = $item['snippet']['thumbnails']['default']['url'];
+
+    echo "<a href='stream.php?id=$videoId'><img src='$thumbnail'></a> ";
+    echo "<a href='stream.php?id=$videoId'>$title</a><br>";
 }
 ?>
