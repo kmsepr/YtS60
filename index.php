@@ -25,12 +25,6 @@ if (!preg_match("/^[a-zA-Z0-9_-]{11}$/", $idstream)) {
 
 $safe_idstream = escapeshellcmd($idstream);
 
-// Ensure the streams directory exists
-$stream_path = "/var/www/html/streams/$safe_idstream.m3u8";
-if (!file_exists("/var/www/html/streams")) {
-    mkdir("/var/www/html/streams", 0777, true);
-}
-
 // Kill any existing stream process
 $existpid = trim(shell_exec("pgrep -f 'ffmpeg.*$safe_idstream'"));
 if (!empty($existpid)) {
@@ -47,13 +41,13 @@ exec($command);
 
 // Wait and check if process started
 sleep(5);
-$newpid = trim(shell_exec("pgrep -f 'ffmpeg.*$safe_idstream'"));
+$newpid = trim(shell_exec("pgrep -f ffmpeg"));
 if (!$newpid) {
     die("Failed to start streaming. Check logs: <pre>" . file_get_contents('/tmp/yt_dlpdebug.txt') . "</pre>");
 }
 
-// Output stream link (HLS)
+// Output RTSP stream link
 echo "<h3>Stream Started</h3>";
-echo "<a href='streams/$safe_idstream.m3u8'>Watch Stream (HLS)</a><br>";
+echo "<p>RTSP Stream URL: <b>rtsp://tv.tg-gw.com/$safe_idstream</b></p>";
 echo "<br><a href='index.php'>Back</a>";
 ?>
