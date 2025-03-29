@@ -12,20 +12,20 @@ RUN apt-get update && apt-get install -y \
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
     && chmod a+rx /usr/local/bin/yt-dlp
 
-# Enable mod_rewrite for Apache
+# Enable mod_rewrite for Apache (for clean URLs)
 RUN a2enmod rewrite
 
-# Set the working directory
+# Set the working directory inside the container
 WORKDIR /var/www/html
 
-# Copy project files
+# Copy all project files into the container
 COPY . /var/www/html/
 
-# Set correct permissions
+# Ensure the streams directory exists and has correct permissions
 RUN mkdir -p /var/www/html/streams /tmp && chmod -R 777 /var/www/html/streams /tmp
 
-# Expose Apache on port 80
+# Expose port 80 (default HTTP port)
 EXPOSE 80
 
-# Start Apache
+# Start Apache when the container runs
 CMD ["apache2-foreground"]
