@@ -1,28 +1,29 @@
-FROM php:8.2-apache
+# Use official PHP with Apache
+FROM php:apache
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
-    curl \
     ffmpeg \
-    procps \
-    unzip \
-    && rm -rf /var/lib/apt/lists/*
+    curl \
+    python3 \
+    python3-pip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Install yt-dlp for YouTube downloads
+RUN pip3 install --no-cache-dir yt-dlp
 
-# Install yt-dlp
-RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
-    chmod a+rx /usr/local/bin/yt-dlp
-
-# Set working directory
-WORKDIR /var/www/html
-
-# Copy application files
+# Copy project files
 COPY . /var/www/html/
 
-# Expose HTTP & RTSP ports
-EXPOSE 80 8554
+# Set working directory
+WORKDIR /var/www/html/
 
-# Start Apache
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
+# Expose Apache port
+EXPOSE 80
+
+# Start Apache server
 CMD ["apache2-foreground"]
