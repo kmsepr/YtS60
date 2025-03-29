@@ -1,31 +1,22 @@
-# Use PHP-Apache Base Image
-FROM php:8.2-apache
+FROM debian:latest
 
-# Install Dependencies
+# Install dependencies
 RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    curl \
-    unzip \
-    && rm -rf /var/lib/apt/lists/*
+    apache2 php wget curl ffmpeg python3 \
+    && apt-get clean
 
 # Install yt-dlp
-RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
-    && chmod a+rx /usr/local/bin/yt-dlp
+RUN wget -q https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/local/bin/yt-dlp && chmod a+rx /usr/local/bin/yt-dlp
 
-# Enable mod_rewrite for Apache
-RUN a2enmod rewrite
+# Enable Apache modules
+RUN a2enmod rewrite && a2enmod headers
 
-# Set Working Directory
-WORKDIR /var/www/html
-
-# Copy Project Files
+# Set up web directory
 COPY . /var/www/html/
+WORKDIR /var/www/html/
 
-# Set Correct Permissions
-RUN chmod -R 777 /var/www/html
-
-# Expose Apache on Port 8080
-EXPOSE 8080
+# Expose ports (Apache and RTSP)
+EXPOSE 80 554 443 8080 8554
 
 # Start Apache
-CMD ["apache2-foreground"]
+CMD ["apachectl", "-D", "FOREGROUND"]
