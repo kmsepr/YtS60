@@ -1,31 +1,29 @@
-FROM debian:latest
+# Use official PHP with Apache
+FROM php:8.2-apache
 
-# Install dependencies
-RUN apt update && apt install -y \
-    apache2 php libapache2-mod-php php-cli ffmpeg python3 python3-venv curl wget unzip \
-    && apt clean
+# Install required dependencies
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    curl \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
 
-# Enable necessary Apache modules
+# Install yt-dlp
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
+    && chmod a+rx /usr/local/bin/yt-dlp
+
+# Set up Apache
+COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
 RUN a2enmod rewrite
 
-# Set up yt-dlp in a virtual environment
-RUN python3 -m venv /opt/venv \
-    && /opt/venv/bin/pip install --upgrade pip \
-    && /opt/venv/bin/pip install --no-cache-dir yt-dlp
-
-# Create necessary directories
-RUN mkdir -p /mnt/data/yt-dlp-cache /mnt/data/cache /var/www/html
-
 # Copy website files
-COPY . /var/www/html
+COPY . /var/www/html/
 WORKDIR /var/www/html
 
-# Set correct permissions for Apache
-RUN chown -R www-data:www-data /var/www/html /mnt/data \
-    && chmod -R 755 /var/www/html /mnt/data
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html
 
-# Expose only port 80 (Koyeb limitation)
+# Expose port
 EXPOSE 80
 
-# Start Apache on container boot
-CMD ["apachectl", "-D", "FOREGROUND"]
+CMD ["apache2-foreground"]
