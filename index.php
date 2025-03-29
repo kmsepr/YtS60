@@ -1,35 +1,27 @@
 <?php
-echo "<title>Youtube</title>";
-echo "<form action='index.php' method='POST'>
-      Youtube Search: <input type='text' name='videoname'>
-      <input type='submit' value='Search videos!'>
-      </form>";
+$idstream = $_GET["id"] ?? "";
+if (!preg_match("/^[a-zA-Z0-9_-]{11}$/", $idstream)) { echo "Invalid ID"; die(); }
 
-echo "Current viewers: ";
-echo shell_exec("ps -ax | grep ffmpeg | wc | awk ' { print $1-3 }'");
-echo " | CPU: ";
-echo shell_exec("top -b -n1 | grep \"Cpu(s)\" | awk '{print $2}'");
-echo "%<br><br>";
+// Kill old FFmpeg process for this stream
+exec("pkill -f 'ffmpeg.*$idstream'");
 
-$request = $_POST["videoname"] ?? '';
-if (empty($request)) { die(); }
+// Start new stream
+exec("ffmpeg -re -i $(yt-dlp -f best -g https://www.youtube.com/watch?v=$idstream) \
+    -acodec amr_wb -ar 16000 -ac 1 -ab 24k \
+    -vcodec mpeg4 -vb 128k -r 15 -vf scale=320:240 \
+    -f rtsp rtsp://tv.tg-gw.com:8554/$idstream >/tmp/yt_dlpdebug.txt 2>&1 &");
 
-file_put_contents('/var/www/html/reqlog.txt', $request . "\r\n", FILE_APPEND);
-$reqenc = urlencode($request);
-$apiKey = getenv('YOUTUBE_API_KEY');
+// Wait for the stream to start
+sleep(3);
 
-$searchUrl = "https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=$reqenc&key=$apiKey";
-$searchResults = json_decode(file_get_contents($searchUrl), true);
-
-foreach ($searchResults['items'] as $item) {
-    $videoId = $item['id']['videoId'];
-    $title = htmlspecialchars($item['snippet']['title']);
-    $durationData = json_decode(file_get_contents(
-        "https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=$videoId&key=$apiKey"
-    ), true);
-    $duration = $durationData['items'][0]['contentDetails']['duration'];
-
-    echo "<a href='stream.php?id=$videoId'>$title</a> ($duration)<br>";
-    echo "<a href='stream.php?id=$videoId'><img src='https://i.ytimg.com/vi/$videoId/1.jpg'></a><br>";
+// Check if the stream is running
+if (empty(exec("ffprobe -show_streams -v quiet rtsp://tv.tg-gw.com:8554/$idstream"))) {
+    sleep(3);
+    header("Refresh:0");
+} else {
+    echo "<a href=rtsp://tv.tg-gw.com:554/$idstream>Watch (link 1)</a><br>";
+    echo "<a href=rtsp://tv.tg-gw.com:443/$idstream>Watch (link 2)</a><br>";
+    echo "<a href=rtsp://tv.tg-gw.com:8554/$idstream>Watch (link 3)</a><br>";
+    echo "<a href=index.php>Back</a>";
 }
 ?>
