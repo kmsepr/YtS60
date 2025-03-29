@@ -1,16 +1,12 @@
-# Use official PHP with Apache
 FROM php:apache
 
 # Install dependencies
-RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    curl \
-    python3 \
-    python3-pip \
+RUN apt-get update && apt-get install -y ffmpeg curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install yt-dlp for YouTube downloads
-RUN pip3 install --no-cache-dir yt-dlp
+# Install yt-dlp for YouTube video downloading
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
+    && chmod a+rx /usr/local/bin/yt-dlp
 
 # Copy project files
 COPY . /var/www/html/
@@ -18,12 +14,5 @@ COPY . /var/www/html/
 # Set working directory
 WORKDIR /var/www/html/
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
-
 # Expose Apache port
 EXPOSE 80
-
-# Start Apache server
-CMD ["apache2-foreground"]
