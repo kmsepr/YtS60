@@ -26,17 +26,17 @@ while ($attempt < $retries) {
 
 // If yt-dlp failed after retries
 if (empty($video_url)) {
-    file_put_contents('/tmp/yt_dlp_error.log', "Failed to fetch video URL for ID: $idstream\n", FILE_APPEND);
+    file_put_contents('/tmp/yt_dlp_error.log', date("Y-m-d H:i:s") . " - Failed to fetch video URL for ID: $idstream\n", FILE_APPEND);
     die("<p>Failed to get video URL. <a href='index.php'>Try Again</a></p>");
 }
 
 $video_url = trim($video_url); // Clean up the URL
 
 // Construct FFmpeg command for RTSP streaming
-$ffmpeg_command = "ffmpeg -re -i " . escapeshellarg($video_url) .
+$ffmpeg_command = "nohup ffmpeg -re -i " . escapeshellarg($video_url) . 
     " -acodec amr_wb -ar 16000 -ac 1 -ab 24k " .
     "-vcodec mpeg4 -vb 128k -r 15 -vf scale=320:240 -f rtsp " . escapeshellarg($rtsp_url) .
-    " > /tmp/yt_dlpdebug.txt 2>&1 &";
+    " > /tmp/ffmpeg_stream_$idstream.log 2>&1 &";
 
 // Execute FFmpeg streaming command
 exec($ffmpeg_command);
@@ -46,7 +46,7 @@ sleep(3); // Give it time to start
 exec("ffprobe -show_streams -v quiet " . escapeshellarg($rtsp_url) . " 2>&1", $output, $status);
 
 if ($status != 0) {
-    file_put_contents('/tmp/rtsp_check_error.log', implode("\n", $output));
+    file_put_contents('/tmp/rtsp_check_error.log', date("Y-m-d H:i:s") . " - Stream failed for ID: $idstream\n" . implode("\n", $output) . "\n", FILE_APPEND);
     echo "<p>Stream failed. <a href='index.php'>Try Again</a></p>";
 } else {
     echo "<p>Stream started! <a href='$rtsp_url'>Watch Stream</a></p>";
