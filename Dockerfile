@@ -11,11 +11,11 @@ RUN apt-get update \
 # Set the cache directory for yt-dlp
 ENV YTDLP_CACHE_DIR=/tmp/yt-dlp-cache
 
+# Ensure Apache uses this environment variable
+RUN echo 'export YTDLP_CACHE_DIR=/tmp/yt-dlp-cache' >> /etc/apache2/envvars
+
 # Create the cache directory and set proper permissions
 RUN mkdir -p /tmp/yt-dlp-cache && chmod -R 777 /tmp/yt-dlp-cache
-
-# Ensure Apache loads the environment variable
-RUN echo 'export YTDLP_CACHE_DIR=/tmp/yt-dlp-cache' >> /etc/apache2/envvars
 
 # Add yt-dlp to PATH
 ENV PATH="/opt/venv/bin:$PATH"
