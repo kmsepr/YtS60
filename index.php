@@ -1,27 +1,30 @@
 <?php
-// Load API Key
-$api_key = getenv('YOUTUBE_API_KEY');
-$query = $_POST["videoname"] ?? '';
+// Display CPU usage and viewers
+echo "Current viewers: ";
+echo shell_exec("ps -ax | grep ffmpeg | wc | awk ' { print $1-3 }'");
+echo " | CPU Usage: ";
+echo shell_exec("top -b -n1 | grep \"Cpu(s)\" | awk '{print $2}'") . "%";
+echo "<br><br>";
 
-if (!empty($query)) {
-    $api_url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=" . urlencode($query) . "&type=video&key=$api_key&maxResults=5";
-    $response = file_get_contents($api_url);
-    $data = json_decode($response, true);
-    
-    foreach ($data['items'] as $video) {
-        $idstream = $video['id']['videoId'];
-        $title = htmlspecialchars($video['snippet']['title']);
-        echo "<a href='stream.php?id=$idstream'>$title</a><br>";
-    }
+// Search form
+echo '<form action="index.php" method="POST">
+        YouTube Search: <input type="text" name="videoname">
+        <input type="submit" value="Search">
+      </form>';
+
+// Process search query
+$request = $_POST["videoname"] ?? "";
+if (empty($request)) { die(); }
+
+$reqenc = urlencode($request);
+$ids = shell_exec("curl -s 'https://www.youtube.com/results?search_query=$reqenc' | grep -oP '(?<=\"videoId\":\")\\w{11}' | uniq");
+$idsarray = array_unique(preg_split('/\s+/', trim($ids)));
+
+foreach ($idsarray as $index => $video_id) {
+    if ($index >= 10) break;
+
+    $title = shell_exec("curl -s 'https://www.youtube.com/watch?v=$video_id' | grep -o -P '(?<=<title>).*?(?=</title>)' | sed 's/- YouTube//g'");
+    echo "<a href='stream.php?id=$video_id'>$title</a> <br>";
+    echo "<a href='stream.php?id=$video_id'><img src='https://i.ytimg.com/vi/$video_id/1.jpg'></a><br><br>";
 }
 ?>
-
-<html>
-<head><title>Youtube RTSP Gateway</title></head>
-<body>
-<form action="index.php" method="POST">
-    Youtube Search: <input type="text" name="videoname">
-    <input type="submit" value="Search">
-</form>
-</body>
-</html>
