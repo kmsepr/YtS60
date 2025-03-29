@@ -3,11 +3,10 @@ services:
   youtube-rtsp:
     build: .
     ports:
-      - "8080:80"
-      - "554:554"
-      - "8554:8554"
+      - "80:80"
+      - "8554:8554/tcp"  # RTSP over TCP
     environment:
-      - YOUTUBE_API_KEY=your_youtube_api_key
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY} # Uses API key from Koyeb environment
     restart: always
     volumes:
       - ./logs:/var/log/apache2
