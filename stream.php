@@ -14,7 +14,7 @@ $rtsp_url = "rtsp://tv.tg-gw.com:554/$idstream";
 $retries = 5;
 $attempt = 0;
 while ($attempt < $retries) {
-    $yt_dl_command = "/usr/bin/yt-dlp --cookies /mnt/data/cookies.txt -f best -g https://www.youtube.com/watch?v=$idstream";
+    $yt_dl_command = "/opt/venv/bin/yt-dlp --cookies /mnt/data/cookies.txt -f best -g https://www.youtube.com/watch?v=$idstream";
     $output = shell_exec($yt_dl_command);
     if ($output) {
         break;
@@ -24,7 +24,7 @@ while ($attempt < $retries) {
 }
 
 // Construct the command using cookies
-$command = "/usr/bin/nohup yt-dlp --cookies /mnt/data/cookies.txt -f best -g https://www.youtube.com/watch?v=$idstream | " .
+$command = "/opt/venv/bin/yt-dlp --cookies /mnt/data/cookies.txt -f best -g https://www.youtube.com/watch?v=$idstream | " .
            "ffmpeg -re -i - -acodec amr_wb -ar 16000 -ac 1 -ab 24k " .
            "-vcodec mpeg4 -vb 128k -r 15 -vf scale=320:240 -f rtsp " .
            "$rtsp_url >/tmp/yt_dlpdebug.txt 2>&1 &";
