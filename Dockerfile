@@ -21,7 +21,8 @@ COPY . /var/www/html
 WORKDIR /var/www/html
 
 # Remove Apache default index.html
-RUN rm -f /var/www/html/index.html
+RUN rm -f /var/www/html/index.html || true
+
 
 # Set correct permissions for Apache
 RUN chown -R www-data:www-data /var/www/html /mnt/data \
