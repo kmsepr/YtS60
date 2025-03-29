@@ -10,7 +10,7 @@ if (!preg_match("/^[a-zA-Z0-9_-]{11}$/", $idstream)) {
 $rtsp_url = "rtsp://tv.tg-gw.com:554/$idstream";
 
 // yt-dlp command to get the video URL (uses cookies)
-$yt_dl_command = "/opt/venv/bin/yt-dlp --cookies /mnt/data/cookies.txt -f best -g " . escapeshellarg("https://www.youtube.com/watch?v=$idstream");
+$yt_dl_command = "/usr/local/bin/yt-dlp --cookies /mnt/data/cookies.txt -f best -g " . escapeshellarg("https://www.youtube.com/watch?v=$idstream");
 
 $retries = 5;
 $video_url = "";
