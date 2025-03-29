@@ -7,7 +7,7 @@ RUN apt update && apt install -y \
 
 # Set up yt-dlp in a virtual environment
 RUN python3 -m venv /opt/venv \
-    && /opt/venv/bin/pip install --no-cache-dir yt-dlp flask
+    && /opt/venv/bin/pip install --no-cache-dir yt-dlp
 
 # Create necessary directories
 RUN mkdir -p /mnt/data/yt-dlp-cache /mnt/data/cache /var/www/html
@@ -19,9 +19,8 @@ WORKDIR /var/www/html
 # Set correct permissions
 RUN chmod -R 777 /mnt/data /var/www/html
 
-# Expose Apache and yt-dlp API ports
-EXPOSE 80 9080
+# Expose only port 80 (Koyeb limitation)
+EXPOSE 80
 
-# Start Apache and yt-dlp API on container boot
-CMD service apache2 start && \
-    /opt/venv/bin/python3 -m flask --app /opt/venv/bin/yt-dlp run --host=0.0.0.0 --port=9080
+# Start Apache on container boot
+CMD ["apachectl", "-D", "FOREGROUND"]
