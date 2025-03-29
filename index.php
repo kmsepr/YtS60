@@ -3,30 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RTSP YouTube Streamer</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 50px;
-        }
-        input {
-            padding: 10px;
-            width: 300px;
-            font-size: 16px;
-        }
-        button {
-            padding: 10px 15px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-    </style>
+    <title>YouTube RTSP Streamer</title>
 </head>
 <body>
-    <h2>Search and Stream YouTube Videos via RTSP</h2>
-    <form action="search.php" method="get">
-        <input type="text" name="q" placeholder="Enter YouTube search term" required>
-        <button type="submit">Search</button>
+    <h2>Search YouTube and Stream via RTSP</h2>
+    <form action="search.php" method="POST">
+        YouTube Search: <input type="text" name="videoname" required>
+        <input type="submit" value="Search">
     </form>
+
+    <h3>Server Info:</h3>
+    <p>Current viewers: <?php echo shell_exec("ps -ax | grep ffmpeg | wc -l"); ?></p>
+    <p>CPU Usage: <?php echo shell_exec("top -b -n1 | grep 'Cpu(s)' | awk '{print $2}'"); ?>%</p>
 </body>
 </html>
