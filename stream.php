@@ -31,6 +31,6 @@ if (!$newpid) {
 
 // Display RTSP Stream Links
 echo "<h3>Stream Started</h3>";
-echo "<a href='rtsp://tv.tg-gw.com:80/$safe_idstream'>RTSP Link 1 (Port 80)</a><br>";
+echo "<a href='rtsp://tv.tg-gw.com:8080/$safe_idstream'>RTSP Link 1 (Port 80)</a><br>";
 
 ?>
