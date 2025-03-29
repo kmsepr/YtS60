@@ -1,22 +1,50 @@
+# Base image
 FROM debian:latest
 
-# Install dependencies
+# Set non-interactive mode for apt-get
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update and install required packages
 RUN apt-get update && apt-get install -y \
-    apache2 php wget curl ffmpeg python3 \
-    && apt-get clean
+    apache2 \
+    php \
+    php-cli \
+    php-curl \
+    curl \
+    ffmpeg \
+    wget \
+    git \
+    unzip \
+    nano \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install yt-dlp
-RUN wget -q https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/local/bin/yt-dlp && chmod a+rx /usr/local/bin/yt-dlp
+RUN wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/local/bin/yt-dlp \
+    && chmod a+rx /usr/local/bin/yt-dlp
+
+# Copy project files
+COPY . /var/www/html
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Apache Configuration
+RUN echo '<VirtualHost *:80>\n\
+    ServerAdmin webmaster@localhost\n\
+    DocumentRoot /var/www/html\n\
+    <Directory /var/www/html>\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+    ErrorLog ${APACHE_LOG_DIR}/error.log\n\
+    CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 # Enable Apache modules
-RUN a2enmod rewrite && a2enmod headers
+RUN a2enmod rewrite
 
-# Set up web directory
-COPY . /var/www/html/
-WORKDIR /var/www/html/
+# Expose ports
+EXPOSE 80 554 8554 8080
 
-# Expose ports (Apache and RTSP)
-EXPOSE 80 554 443 8080 8554
-
-# Start Apache
-CMD ["apachectl", "-D", "FOREGROUND"]
+# Start Apache on container launch
+CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
