@@ -1,0 +1,13 @@
+version: "3"
+services:
+  youtube-rtsp:
+    build: .
+    ports:
+      - "8080:80"
+      - "554:554"
+      - "8554:8554"
+    environment:
+      - YOUTUBE_API_KEY=your_youtube_api_key
+    restart: always
+    volumes:
+      - ./logs:/var/log/apache2
