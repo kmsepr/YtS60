@@ -1,55 +1,49 @@
 <?php
+set_time_limit(90);
 $idstream = $_GET["id"] ?? "";
 
-// Validate YouTube Video ID format
+// Validate video ID
 if (!preg_match("/^[a-zA-Z0-9_-]{11}$/", $idstream)) {
-    die("Invalid video ID");
+    die("<p>Error: Invalid video ID. <a href='index.php'>Try Again</a></p>");
 }
 
 // Define RTSP output URL
 $rtsp_url = "rtsp://tv.tg-gw.com:554/$idstream";
 
-// yt-dlp command to fetch direct video URL
-$yt_dl_command = "/opt/venv/bin/yt-dlp --cookies /mnt/data/cookies.txt -f best -g " . escapeshellarg("https://www.youtube.com/watch?v=$idstream");
-
-$retries = 5;
-$attempt = 0;
-$video_url = "";
-
-// Retry yt-dlp download if it fails
-while ($attempt < $retries) {
-    $video_url = shell_exec($yt_dl_command);
-    if (!empty($video_url)) break;
-    $attempt++;
-    sleep(10);
+// Kill old FFmpeg process
+$existpid = shell_exec("pgrep -f 'ffmpeg.*$idstream'");
+if ($existpid) {
+    exec("kill $existpid");
 }
 
-// If yt-dlp failed after retries
+// Run yt-dlp to get video URL
+$yt_dl_command = "/opt/venv/bin/yt-dlp -f best -g https://www.youtube.com/watch?v=$idstream";
+$video_url = shell_exec($yt_dl_command);
+
 if (empty($video_url)) {
-    file_put_contents('/tmp/yt_dlp_error.log', "Failed to fetch video URL for: $idstream\n", FILE_APPEND);
-    die("<p>Failed to get video URL. <a href='index.php'>Try Again</a></p>");
+    die("<p>Error: Could not fetch video. <a href='index.php'>Try Again</a></p>");
 }
 
-$video_url = trim($video_url); // Clean up the URL
-
-// Construct FFmpeg command for RTSP streaming
-$ffmpeg_command = "nohup ffmpeg -re -i " . escapeshellarg($video_url) .
+// Start FFmpeg stream
+$ffmpeg_command = "ffmpeg -re -i " . escapeshellarg(trim($video_url)) .
     " -acodec amr_wb -ar 16000 -ac 1 -ab 24k " .
     "-vcodec mpeg4 -vb 128k -r 15 -vf scale=320:240 -f rtsp " . escapeshellarg($rtsp_url) .
     " > /tmp/ffmpeg_stream_$idstream.log 2>&1 &";
 
-// Execute FFmpeg streaming command
 exec($ffmpeg_command);
-sleep(3); // Give it time to start
 
 // Check if the stream is running
-exec("ffprobe -show_streams -v quiet " . escapeshellarg($rtsp_url) . " 2>&1", $output, $status);
-
-if ($status != 0) {
-    file_put_contents('/tmp/rtsp_check_error.log', "Stream failed for: $idstream\n" . implode("\n", $output) . "\n", FILE_APPEND);
-    echo "<p>Stream failed. <a href='index.php'>Try Again</a></p>";
-} else {
-    echo "<p>Stream started! <a href='$rtsp_url'>Watch Stream</a></p>";
-    echo "<a href='index.php'>Back</a>";
+for ($i = 0; $i < 30; $i++) {
+    $checkstream = exec("ffprobe -show_streams -v quiet " . escapeshellarg($rtsp_url));
+    if (!empty($checkstream)) {
+        echo "<h2>Stream Ready!</h2>";
+        echo "<a href='$rtsp_url'>Watch Stream</a><br>";
+        echo "<a href='index.php'>Back</a>";
+        exit;
+    }
+    sleep(3);
 }
+
+// If stream is not available
+echo "<h2>Stream not available after 90 seconds.</h2>";
 ?>
