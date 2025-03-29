@@ -15,7 +15,7 @@
     </form>
 
     <p>
-        <strong>Current Viewers:</strong> <?php echo shell_exec("ps -ax | grep ffmpeg | wc -l"); ?> |
+        <strong>Current Viewers:</strong> <?php echo shell_exec("pgrep -c ffmpeg"); ?> |
         <strong>CPU Usage:</strong> <?php echo shell_exec("top -b -n1 | grep 'Cpu(s)' | awk '{print $2}'"); ?>%
     </p>
 
