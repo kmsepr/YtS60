@@ -1,27 +1,32 @@
-
 <?php
-$query = $_GET["q"] ?? "";
+require 'config.php';  // Include YouTube API Key
 
-// Validate search query
+$query = $_POST["videoname"] ?? "";
+
+// Validate input
 if (empty($query)) {
-    die("Search query missing");
+    die("<p>Error: Empty search query. <a href='index.php'>Try Again</a></p>");
 }
 
-// Search YouTube and get multiple results
-$search_command = "/opt/venv/bin/yt-dlp --cookies /mnt/data/cookies.txt 'ytsearch5:$query' --get-title --get-id 2>&1";
-$results = explode("\n", trim(shell_exec($search_command)));
+// Use YouTube API for search
+$api_url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=" . urlencode($query) . "&maxResults=5&type=video&key=" . YT_API_KEY;
+$response = file_get_contents($api_url);
+$data = json_decode($response, true);
 
-if (count($results) < 2) {
+// Handle API errors
+if (empty($data['items'])) {
     die("<p>No results found. <a href='index.php'>Try Again</a></p>");
 }
 
-echo "<h2>Select a video to stream</h2>";
-echo "<ul>";
-for ($i = 0; $i < count($results); $i += 2) {
-    $title = htmlspecialchars($results[$i]);
-    $video_id = $results[$i + 1];
-    echo "<li><a href='stream.php?id=$video_id'>$title</a></li>";
+// Display search results
+echo "<h2>Select a Video to Stream</h2><ul>";
+foreach ($data['items'] as $item) {
+    $video_id = $item['id']['videoId'];
+    $title = htmlspecialchars($item['snippet']['title']);
+    $thumbnail = $item['snippet']['thumbnails']['default']['url'];
+    
+    echo "<li><a href='stream.php?id=$video_id'>$title</a> <br>";
+    echo "<a href='stream.php?id=$video_id'><img src='$thumbnail'></a></li><hr>";
 }
-echo "</ul>";
-echo "<a href='index.php'>Back</a>";
+echo "</ul><a href='index.php'>Back</a>";
 ?>
